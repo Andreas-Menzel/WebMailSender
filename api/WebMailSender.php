@@ -8,6 +8,7 @@
     $api_key = NULL;
 
     $from = NULL;
+    $replyto = NULL;
     $to = NULL;
     $subject = NULL;
     $message = NULL;
@@ -18,6 +19,8 @@
 
     if(isset($_GET['from']) && $_GET['from'] != "")
         $from = $_GET['from'];
+    if(isset($_GET['replyto']) && $_GET['replyto'] != "")
+        $replyto = $_GET['replyto'];
     if(isset($_GET['to']) && $_GET['to'] != "")
         $to = $_GET['to'];
     if(isset($_GET['subject']) && $_GET['subject'] != "")
@@ -40,6 +43,10 @@
         $response['error'] = true;
         $response['errmsg'] = 'Argument missing: from is required.';
         return_response($response);
+    } else if(is_null($replyto)) {
+        $response['error'] = true;
+        $response['errmsg'] = 'Argument missing: replyto is required.';
+        return_response($response);
     } else if(is_null($to)) {
         $response['error'] = true;
         $response['errmsg'] = 'Argument missing: to is required.';
@@ -61,6 +68,11 @@
         $response['errmsg'] = 'Argument not valid: from must be a valid email address.';
         return_response($response);
     }
+    if(!filter_var($replyto, FILTER_VALIDATE_EMAIL)) {
+        $response['error'] = true;
+        $response['errmsg'] = 'Argument not valid: replyto must be a valid email address.';
+        return_response($response);
+    }
     if(!filter_var($to, FILTER_VALIDATE_EMAIL)) {
         $response['error'] = true;
         $response['errmsg'] = 'Argument not valid: to must be a valid email address.';
@@ -68,7 +80,7 @@
     }
 
 
-    send_mail($api_key, $from, $to, $subject, $message);
+    send_mail($api_key, $from, $replyto, $to, $subject, $message);
 
 
     // This should not be executed: send_mail(...) should have sent the response
@@ -80,9 +92,10 @@
 /********************************* FUNCTIONS **********************************/
 /******************************************************************************/
 
-    function send_mail($api_key, $from, $to, $subject, $message) {
+    function send_mail($api_key, $from, $replyto, $to, $subject, $message) {
         // $api_key valid?
         // $from allowed?
+        // $replyto allowed?
         // $to allowed?
         // $from credentials in database?
 
