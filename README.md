@@ -39,3 +39,13 @@ CREATE TABLE EMAIL_CREDENTIALS (
 a.php?api_key=<api_key>&from=<from>&to=<to>&subject=<subject>&message=<message>
 ```
 api_key, from, to, subject, message
+
+## PHPMailer
+This project uses [PHPMailer](https://github.com/PHPMailer/PHPMailer) version
+[6.6.0](https://github.com/PHPMailer/PHPMailer/releases/tag/v6.6.0) to send
+emails. All files within `api/PHPMailer-6.6.0` remain unchanged.
+
+Have a look at the libraries [README.md](https://github.com/PHPMailer/PHPMailer/blob/master/README.md),
+[license](https://github.com/PHPMailer/PHPMailer/blob/master/LICENSE)
+and [security notices](https://github.com/PHPMailer/PHPMailer/blob/master/SECURITY.md)
+if you have any questions regarding this library directly.
