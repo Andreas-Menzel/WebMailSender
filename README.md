@@ -14,7 +14,7 @@ CREATE DATABASE WebMailSender;
 ```
 **Grant usage on database**
 ```
-GRANT ALL PRIVILEGES ON WebMailSender TO user@localhost IDENTIFIED BY 'pass';
+GRANT ALL PRIVILEGES ON WebMailSender.* TO user@localhost IDENTIFIED BY 'pass';
 ```
 **Create tables**
 ```
