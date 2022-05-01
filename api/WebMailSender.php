@@ -5,6 +5,12 @@
     error_reporting(E_ALL);
 
 
+    $sql_host     = "localhost";
+    $sql_dbname   = "WebMailSender";
+    $sql_user     = "WebMailSender";
+    $sql_password = "WebMailSenderPass";
+
+
     $api_key = NULL;
 
     $from = NULL;
@@ -93,13 +99,88 @@
 /******************************************************************************/
 
     function send_mail($api_key, $from, $replyto, $to, $subject, $message) {
-        // $api_key valid?
-        // $from allowed?
-        // $replyto allowed?
-        // $to allowed?
-        // $from credentials in database?
+        global $response;
 
-        // send email
+        global $sql_host;
+        global $sql_dbname;
+        global $sql_user;
+        global $sql_password;
+
+        global $api_key;
+
+        // Connect to database
+        try {
+            $pdo = new PDO('mysql:host=' . $sql_host . ';dbname=' . $sql_dbname, $sql_user, $sql_password);
+            $pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION ); // TODO: remove debug
+        } catch (\Exception $e) {
+            $response['error'] = true;
+            $response['errmsg'] = 'Internal server error: could not connect to database.';
+            return_response($response);
+        }
+
+        // Get API_KEYS entry
+        $sql = "SELECT * FROM API_KEYS WHERE api_key = :api_key;";
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->bindParam(':api_key', $api_key, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $API_KEYS__returnvals = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if($API_KEYS__returnvals == false) {
+            $response['error'] = true;
+            $response['errmsg'] = 'API key not valid: could not find api key.';
+            return_response($response);
+        }
+
+        // Check if api key is valid
+        // ... oder abgelaufen
+
+        // Check if $from is allowed
+        // TODO: regex
+        if($from != $API_KEYS__returnvals['mail_from']) {
+            $response['error'] = true;
+            $response['errmsg'] = 'Permission error: You are not allowed to send emails from this address.';
+            return_response($response);
+        }
+
+        // Check if $replyto is allowed
+        // TODO: regex
+        if($replyto != $API_KEYS__returnvals['mail_replyto']) {
+            $response['error'] = true;
+            $response['errmsg'] = 'Permission error: You are not allowed to set this replyto address.';
+            return_response($response);
+        }
+
+        // Check if $to is allowed
+        // TODO: regex
+        if($to != $API_KEYS__returnvals['mail_to']) {
+            $response['error'] = true;
+            $response['errmsg'] = 'Permission error: You are not allowed to send emails to this address.';
+            return_response($response);
+        }
+
+
+        // Get EMAIL_CREDENTIALS entry
+        $sql = "SELECT * FROM EMAIL_CREDENTIALS WHERE email = :email;";
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->bindParam(':email', $from, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $EMAIL_CREDENTIALS__returnvals = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if($EMAIL_CREDENTIALS__returnvals == false) {
+            $response['error'] = true;
+            $response['errmsg'] = 'Internal server error: could not find credentials for from-mail in database.';
+            return_response($response);
+        }
+
+        // TODO: send mail...
+
+        $pdo = NULL;
+
+        return_response($response);
     }
 
 
