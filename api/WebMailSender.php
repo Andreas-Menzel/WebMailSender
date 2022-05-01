@@ -5,6 +5,15 @@
     error_reporting(E_ALL);
 
 
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\SMTP;
+    use PHPMailer\PHPMailer\Exception;
+
+    require 'PHPMailer-6.6.0/src/Exception.php';
+    require 'PHPMailer-6.6.0/src/PHPMailer.php';
+    require 'PHPMailer-6.6.0/src/SMTP.php';
+
+
     $sql_host     = "localhost";
     $sql_dbname   = "WebMailSender";
     $sql_user     = "WebMailSender";
@@ -176,9 +185,43 @@
             return_response($response);
         }
 
-        // TODO: send mail...
 
         $pdo = NULL;
+
+        // TODO: send mail...
+        $mail = new PHPMailer(true);
+
+        try {
+            //Server settings
+            /* TODO: remove */#$mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
+            $mail->isSMTP();                                            //Send using SMTP
+            $mail->Host       = $EMAIL_CREDENTIALS__returnvals['host'];
+            $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
+            $mail->Username   = $EMAIL_CREDENTIALS__returnvals['username'];
+            $mail->Password   = $EMAIL_CREDENTIALS__returnvals['password'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
+            $mail->Port       = $EMAIL_CREDENTIALS__returnvals['port']; /* TODO: convert to int? */
+
+            //Recipients
+            $mail->setFrom($from, 'WebMailSender');
+            $mail->addAddress($to, 'WebMailSender');
+            $mail->addReplyTo($replyto, 'Information');
+
+            //Content
+            $mail->isHTML(true);                                  //Set email format to HTML
+            $mail->Subject = $subject;
+            $mail->Body    = $message;
+            $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+
+            $mail->send();
+            #echo 'Message has been sent';
+        } catch (Exception $e) {
+            $response['error'] = true;
+            $response['errmsg'] = 'Internal server error: email not sent: ' . $mail->ErrorInfo;
+            $response['credentials'] = $EMAIL_CREDENTIALS__returnvals;
+            return_response($response);
+        }
+
 
         return_response($response);
     }
