@@ -21,11 +21,13 @@ GRANT ALL PRIVILEGES ON WebMailSender.* TO user@localhost IDENTIFIED BY 'pass';
 CREATE TABLE API_KEYS (
     api_key         VARCHAR(128)    PRIMARY KEY,
     mail_from       VARCHAR(128)    NOT NULL,
+    name_from       VARCHAR(128)    NOT NULL,
     mail_replyto    VARCHAR(128)    NOT NULL,
+    name_replyto    VARCHAR(128)    NOT NULL,
     mail_to         VARCHAR(128)    NOT NULL
     );
 
-CREATE TABLE EMAIL_CREDENTIALS (
+CREATE TABLE EMAIL_SETTINGS (
     email       VARCHAR(128)    PRIMARY KEY,
     host        VARCHAR(128)    NOT NULL,
     username    VARCHAR(128)    NOT NULL,

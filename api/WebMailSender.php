@@ -22,8 +22,6 @@
 
     $api_key = NULL;
 
-    $from = NULL;
-    $replyto = NULL;
     $to = NULL;
     $subject = NULL;
     $message = NULL;
@@ -32,10 +30,6 @@
     if(isset($_GET['api_key']) && $_GET['api_key'] != "")
         $api_key = $_GET['api_key'];
 
-    if(isset($_GET['from']) && $_GET['from'] != "")
-        $from = $_GET['from'];
-    if(isset($_GET['replyto']) && $_GET['replyto'] != "")
-        $replyto = $_GET['replyto'];
     if(isset($_GET['to']) && $_GET['to'] != "")
         $to = $_GET['to'];
     if(isset($_GET['subject']) && $_GET['subject'] != "")
@@ -54,14 +48,6 @@
         $response['error'] = true;
         $response['errmsg'] = 'Argument missing: api_key is required.';
         return_response($response);
-    } else if(is_null($from)) {
-        $response['error'] = true;
-        $response['errmsg'] = 'Argument missing: from is required.';
-        return_response($response);
-    } else if(is_null($replyto)) {
-        $response['error'] = true;
-        $response['errmsg'] = 'Argument missing: replyto is required.';
-        return_response($response);
     } else if(is_null($to)) {
         $response['error'] = true;
         $response['errmsg'] = 'Argument missing: to is required.';
@@ -77,17 +63,7 @@
     }
 
 
-    // Check if $from, $replyto and $to are valid email adresses
-    if(!filter_var($from, FILTER_VALIDATE_EMAIL)) {
-        $response['error'] = true;
-        $response['errmsg'] = 'Argument not valid: from must be a valid email address.';
-        return_response($response);
-    }
-    if(!filter_var($replyto, FILTER_VALIDATE_EMAIL)) {
-        $response['error'] = true;
-        $response['errmsg'] = 'Argument not valid: replyto must be a valid email address.';
-        return_response($response);
-    }
+    // Check if $to is a valid email address
     if(!filter_var($to, FILTER_VALIDATE_EMAIL)) {
         $response['error'] = true;
         $response['errmsg'] = 'Argument not valid: to must be a valid email address.';
@@ -95,7 +71,7 @@
     }
 
 
-    send_mail($api_key, $from, $replyto, $to, $subject, $message);
+    send_mail($api_key, $to, $subject, $message);
 
 
     // This should not be executed: send_mail(...) should have sent the response
@@ -107,7 +83,7 @@
 /********************************* FUNCTIONS **********************************/
 /******************************************************************************/
 
-    function send_mail($api_key, $from, $replyto, $to, $subject, $message) {
+    function send_mail($api_key, $to, $subject, $message) {
         global $response;
 
         global $sql_host;
@@ -145,20 +121,6 @@
         // Check if api key is valid
         // ... oder abgelaufen
 
-        // Check if $from is allowed
-        if($from != $API_KEYS__returnvals['mail_from']) {
-            $response['error'] = true;
-            $response['errmsg'] = 'Permission error: You are not allowed to send emails from this address.';
-            return_response($response);
-        }
-
-        // Check if $replyto is allowed
-        if($replyto != $API_KEYS__returnvals['mail_replyto']) {
-            $response['error'] = true;
-            $response['errmsg'] = 'Permission error: You are not allowed to set this replyto address.';
-            return_response($response);
-        }
-
         // Check if $to is allowed - check with regex
         if(preg_match('/' . $API_KEYS__returnvals['mail_to'] . '/', $to) !== 1) {
             $response['error'] = true;
@@ -167,42 +129,41 @@
         }
 
 
-        // Get EMAIL_CREDENTIALS entry
-        $sql = "SELECT * FROM EMAIL_CREDENTIALS WHERE email = :email;";
+        // Get EMAIL_SETTINGS entry
+        $sql = "SELECT * FROM EMAIL_SETTINGS WHERE email = :email;";
         $stmt = $pdo->prepare($sql);
 
-        $stmt->bindParam(':email', $from, PDO::PARAM_STR);
+        $stmt->bindParam(':email', $API_KEYS__returnvals['mail_from'], PDO::PARAM_STR);
         $stmt->execute();
 
-        $EMAIL_CREDENTIALS__returnvals = $stmt->fetch(PDO::FETCH_ASSOC);
+        $EMAIL_SETTINGS__returnvals = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if($EMAIL_CREDENTIALS__returnvals == false) {
+        if($EMAIL_SETTINGS__returnvals == false) {
             $response['error'] = true;
             $response['errmsg'] = 'Internal server error: could not find credentials for from-mail in database.';
             return_response($response);
         }
 
-
         $pdo = NULL;
 
-        // TODO: send mail...
+
         $mail = new PHPMailer(true);
 
         try {
             //Server settings
             /* TODO: remove */#$mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
             $mail->isSMTP();                                            //Send using SMTP
-            $mail->Host       = $EMAIL_CREDENTIALS__returnvals['host'];
+            $mail->Host       = $EMAIL_SETTINGS__returnvals['host'];
             $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
-            $mail->Username   = $EMAIL_CREDENTIALS__returnvals['username'];
-            $mail->Password   = $EMAIL_CREDENTIALS__returnvals['password'];
+            $mail->Username   = $EMAIL_SETTINGS__returnvals['username'];
+            $mail->Password   = $EMAIL_SETTINGS__returnvals['password'];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-            $mail->Port       = $EMAIL_CREDENTIALS__returnvals['port']; /* TODO: convert to int? */
+            $mail->Port       = $EMAIL_SETTINGS__returnvals['port']; /* TODO: convert to int? */
 
             //Recipients
-            $mail->setFrom($from, 'WebMailSender');
-            $mail->addAddress($to, 'WebMailSender');
-            $mail->addReplyTo($replyto, 'Information');
+            $mail->setFrom($API_KEYS__returnvals['mail_from'], $API_KEYS__returnvals['name_from']);
+            $mail->addReplyTo($API_KEYS__returnvals['mail_replyto'], $API_KEYS__returnvals['name_replyto']);
+            $mail->addAddress($to);
 
             //Content
             $mail->isHTML(true);                                  //Set email format to HTML
@@ -215,7 +176,7 @@
         } catch (Exception $e) {
             $response['error'] = true;
             $response['errmsg'] = 'Internal server error: email not sent: ' . $mail->ErrorInfo;
-            $response['credentials'] = $EMAIL_CREDENTIALS__returnvals;
+            $response['credentials'] = $EMAIL_SETTINGS__returnvals;
             return_response($response);
         }
 
