@@ -77,7 +77,7 @@
     }
 
 
-    // Check if $from and $to are valid email adresses
+    // Check if $from, $replyto and $to are valid email adresses
     if(!filter_var($from, FILTER_VALIDATE_EMAIL)) {
         $response['error'] = true;
         $response['errmsg'] = 'Argument not valid: from must be a valid email address.';
@@ -146,7 +146,6 @@
         // ... oder abgelaufen
 
         // Check if $from is allowed
-        // TODO: regex
         if($from != $API_KEYS__returnvals['mail_from']) {
             $response['error'] = true;
             $response['errmsg'] = 'Permission error: You are not allowed to send emails from this address.';
@@ -154,16 +153,14 @@
         }
 
         // Check if $replyto is allowed
-        // TODO: regex
         if($replyto != $API_KEYS__returnvals['mail_replyto']) {
             $response['error'] = true;
             $response['errmsg'] = 'Permission error: You are not allowed to set this replyto address.';
             return_response($response);
         }
 
-        // Check if $to is allowed
-        // TODO: regex
-        if($to != $API_KEYS__returnvals['mail_to']) {
+        // Check if $to is allowed - check with regex
+        if(preg_match('/' . $API_KEYS__returnvals['mail_to'] . '/', $to) !== 1) {
             $response['error'] = true;
             $response['errmsg'] = 'Permission error: You are not allowed to send emails to this address.';
             return_response($response);
