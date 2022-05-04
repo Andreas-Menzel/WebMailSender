@@ -67,6 +67,9 @@
     if(!filter_var($to, FILTER_VALIDATE_EMAIL)) {
         $response['error'] = true;
         $response['errmsg'] = 'Argument not valid: to must be a valid email address.';
+
+        write_log($response['error'], $response['errmsg'], $api_key, NULL, NULL, NULL, NULL, $to, $subject, $message);
+
         return_response($response);
     }
 
@@ -77,6 +80,9 @@
     // This should not be executed: send_mail(...) should have sent the response
     $response['error'] = true;
     $response['errmsg'] = 'Internal server error: email not sent.';
+
+    write_log($response['error'], $response['errmsg'], $api_key, NULL, NULL, NULL, NULL, $to, $subject, $message);
+
     return_response($response);
 
 /******************************************************************************/
@@ -115,6 +121,9 @@
         if($API_KEYS__returnvals == false) {
             $response['error'] = true;
             $response['errmsg'] = 'API key not valid: could not find api key.';
+
+            write_log($response['error'], $response['errmsg'], $api_key, NULL, NULL, NULL, NULL, $to, $subject, $message);
+
             return_response($response);
         }
 
@@ -125,6 +134,9 @@
         if(preg_match('/' . $API_KEYS__returnvals['mail_to'] . '/', $to) !== 1) {
             $response['error'] = true;
             $response['errmsg'] = 'Permission error: You are not allowed to send emails to this address.';
+
+            write_log($response['error'], $response['errmsg'], $api_key, NULL, NULL, NULL, NULL, $to, $subject, $message);
+
             return_response($response);
         }
 
@@ -138,13 +150,18 @@
 
         $EMAIL_SETTINGS__returnvals = $stmt->fetch(PDO::FETCH_ASSOC);
 
+
+        $pdo = NULL;
+
+
         if($EMAIL_SETTINGS__returnvals == false) {
             $response['error'] = true;
             $response['errmsg'] = 'Internal server error: could not find credentials for from-mail in database.';
+
+            write_log($response['error'], $response['errmsg'], $api_key, NULL, NULL, NULL, NULL, $to, $subject, $message);
+
             return_response($response);
         }
-
-        $pdo = NULL;
 
 
         $mail = new PHPMailer(true);
@@ -172,16 +189,64 @@
             $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
 
             $mail->send();
-            #echo 'Message has been sent';
         } catch (Exception $e) {
             $response['error'] = true;
             $response['errmsg'] = 'Internal server error: email not sent: ' . $mail->ErrorInfo;
-            $response['credentials'] = $EMAIL_SETTINGS__returnvals;
+
+            write_log($response['error'], $response['errmsg'], $api_key, NULL, NULL, NULL, NULL, $to, $subject, $message);
+
             return_response($response);
         }
 
 
+        write_log(0, NULL, $api_key,
+                    $API_KEYS__returnvals['mail_from'], $API_KEYS__returnvals['name_from'],
+                    $API_KEYS__returnvals['mail_replyto'], $API_KEYS__returnvals['name_replyto'],
+                    $to, $subject, $message);
+
+
         return_response($response);
+    }
+
+
+    function write_log($error, $errmsg, $api_key, $mail_from, $name_from, $mail_replyto, $name_replyto, $mail_to, $subject, $message) {
+        global $sql_host;
+        global $sql_dbname;
+        global $sql_user;
+        global $sql_password;
+
+
+        // Connect to database
+        try {
+            $pdo = new PDO('mysql:host=' . $sql_host . ';dbname=' . $sql_dbname, $sql_user, $sql_password);
+            $pdo->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION ); // TODO: remove debug
+        } catch (\Exception $e) {
+            $response['error'] = true;
+            $response['errmsg'] = 'Internal server error: could not connect to database.';
+            return_response($response);
+        }
+
+
+        // Write to log
+        $sql = 'INSERT INTO LOG(error, errmsg, api_key, mail_from, name_from, mail_replyto, name_replyto, mail_to, subject, message) VALUES(:error, :errmsg, :api_key, :mail_from, :name_from, :mail_replyto, :name_replyto, :mail_to, :subject, :message);';
+        $stmt = $pdo->prepare($sql);
+
+        $stmt->bindParam(':error', $error, PDO::PARAM_STR);
+        $stmt->bindParam(':errmsg', $errmsg, PDO::PARAM_STR);
+        $stmt->bindParam(':api_key', $api_key, PDO::PARAM_STR);
+        $stmt->bindParam(':mail_from', $mail_from, PDO::PARAM_STR);
+        $stmt->bindParam(':name_from', $name_from, PDO::PARAM_STR);
+        $stmt->bindParam(':mail_replyto', $mail_replyto, PDO::PARAM_STR);
+        $stmt->bindParam(':name_replyto', $name_replyto, PDO::PARAM_STR);
+        $stmt->bindParam(':mail_to', $mail_to, PDO::PARAM_STR);
+        $stmt->bindParam(':subject', $subject, PDO::PARAM_STR);
+        $stmt->bindParam(':message', $message, PDO::PARAM_STR);
+
+        $stmt->execute();
+
+
+        // Close database connection
+        $pdo = NULL;
     }
 
 

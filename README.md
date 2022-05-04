@@ -28,11 +28,26 @@ CREATE TABLE API_KEYS (
     );
 
 CREATE TABLE EMAIL_SETTINGS (
-    email       VARCHAR(128)    PRIMARY KEY,
-    host        VARCHAR(128)    NOT NULL,
-    username    VARCHAR(128)    NOT NULL,
-    password    VARCHAR(128)    NOT NULL,
-    port        INT
+    email           VARCHAR(128)    PRIMARY KEY,
+    host            VARCHAR(128)    NOT NULL,
+    username        VARCHAR(128)    NOT NULL,
+    password        VARCHAR(128)    NOT NULL,
+    port            INT
+    );
+
+CREATE TABLE LOG (
+    id              INT             PRIMARY KEY AUTO_INCREMENT,
+    datetime        DATETIME        NOT NULL    DEFAULT(CURRENT_TIMESTAMP),
+    error           BOOL            NOT NULL,
+    errmsg          VARCHAR(128),
+    api_key         VARCHAR(128),
+    mail_from       VARCHAR(128),
+    name_from       VARCHAR(128),
+    mail_replyto    VARCHAR(128),
+    name_replyto    VARCHAR(128),
+    mail_to         VARCHAR(128),
+    subject         VARCHAR(512),
+    message         VARCHAR(10240)
     );
 ```
 
