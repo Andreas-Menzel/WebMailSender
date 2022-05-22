@@ -24,7 +24,8 @@ CREATE TABLE API_KEYS (
     name_from       VARCHAR(128)    NOT NULL,
     mail_replyto    VARCHAR(128)    NOT NULL,
     name_replyto    VARCHAR(128)    NOT NULL,
-    mail_to         VARCHAR(128)    NOT NULL
+    mail_to         VARCHAR(128)    NOT NULL,
+    expire          DATETIME        NOT NULL
     );
 
 CREATE TABLE EMAIL_SETTINGS (

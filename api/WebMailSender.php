@@ -127,8 +127,19 @@
             return_response($response);
         }
 
-        // Check if api key is valid
-        // ... oder abgelaufen
+        // Check if api key has expired
+        date_default_timezone_set('UTC'); // Use UTC timezone!
+        $expire = date_create_from_format('Y-m-d H:i:s', $API_KEYS__returnvals['expire']);
+        $now = new DateTime('now');
+
+        if($expire <= $now) {
+            $response['error'] = true;
+            $response['errmsg'] = 'API key not valid: expired at ' . $API_KEYS__returnvals['expire'] . '.';
+
+            write_log($response['error'], $response['errmsg'], $api_key, NULL, NULL, NULL, NULL, $to, $subject, $message);
+
+            return_response($response);
+        }
 
         // Check if $to is allowed - check with regex
         if(preg_match('/' . $API_KEYS__returnvals['mail_to'] . '/', $to) !== 1) {
@@ -175,7 +186,7 @@
             $mail->Username   = $EMAIL_SETTINGS__returnvals['username'];
             $mail->Password   = $EMAIL_SETTINGS__returnvals['password'];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
-            $mail->Port       = $EMAIL_SETTINGS__returnvals['port']; /* TODO: convert to int? */
+            $mail->Port       = $EMAIL_SETTINGS__returnvals['port'];
 
             //Recipients
             $mail->setFrom($API_KEYS__returnvals['mail_from'], $API_KEYS__returnvals['name_from']);
