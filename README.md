@@ -2,6 +2,16 @@
 
 ## Web-API for sending emails.
 
+WebMailSender is an easy-to-use PHP Web-API to send emails via a SMTP-server. It
+has two advantages
+
+**1) Security**: No need to store the email credentials on every devide. You can
+create an expiring api-key that limits the email addresses to which an email can
+be sent.
+
+**2) Usability**: Just "open a website" to send the email. No need to manually
+connect to the mail-server.
+
 ### Main Setup
 
 #### Database
@@ -135,6 +145,13 @@ to describe the error type.
 
 
 ### PHPMailer
-This project uses [PHPMailer](https://github.com/PHPMailer/PHPMailer) version [6.6.0](https://github.com/PHPMailer/PHPMailer/releases/tag/v6.6.0) to send emails. All files within `api/PHPMailer-6.6.0` remain unchanged.
+This project uses [PHPMailer](https://github.com/PHPMailer/PHPMailer) version
+[6.6.0](https://github.com/PHPMailer/PHPMailer/releases/tag/v6.6.0) to send
+emails. All files within `api/PHPMailer-6.6.0` remain unchanged and are not a
+part of this project and its license.
 
-Have a look at the libraries [README.md](https://github.com/PHPMailer/PHPMailer/blob/master/README.md), [license](https://github.com/PHPMailer/PHPMailer/blob/master/LICENSE) and [security notices](https://github.com/PHPMailer/PHPMailer/blob/master/SECURITY.md) if you have any questions regarding this library directly.
+Have a look at the libraries
+[README.md](https://github.com/PHPMailer/PHPMailer/blob/master/README.md),
+[license](https://github.com/PHPMailer/PHPMailer/blob/master/LICENSE) and
+[security notices](https://github.com/PHPMailer/PHPMailer/blob/master/SECURITY.md)
+if you have any questions regarding this library directly.
