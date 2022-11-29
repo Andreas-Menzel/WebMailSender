@@ -3,7 +3,7 @@
 ## Web-API for sending emails.
 
 WebMailSender is an easy-to-use PHP Web-API to send emails via a SMTP-server. It
-has two advantages
+has two advantages:
 
 **1) Security**: No need to store the email credentials on every devide. You can
 create an expiring api-key that limits the email addresses to which an email can
@@ -142,6 +142,16 @@ to describe the error type.
     "errmsg": "Error ..."
 }
 ```
+
+
+### Contributing
+
+If you would like to contribute to this project, I would be more than happy!
+
+The main missing module that would highly improve the user experience is a
+user interface (e.g. Web-Interface or Python script) to change the settings and
+manage the api-keys. At the moment I'm not planning on implementing this feature
+myself because I don't need it.
 
 
 ### PHPMailer
